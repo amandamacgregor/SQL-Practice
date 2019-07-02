@@ -1,0 +1,154 @@
+Get country and language w/ JOIN
+
+SELECT
+	country.name, countrylanguage.language
+FROM
+	country JOIN
+    countrylanguage ON countrylanguage.countrycode = country.code
+WHERE
+	name = 'United States'
+
+
+What are the cities of the US? (274) India? (341)
+
+    SELECT
+    	country.name, city.name
+    FROM
+    	country JOIN
+        city ON city.countrycode = country.code
+    WHERE
+    	country.name = 'India'
+
+
+What are the official languages of Switzerland? (4 languages)
+
+    SELECT
+        country.name, countrylanguage.language
+    FROM
+        country JOIN
+        countrylanguage ON countrylanguage.countrycode = country.code
+    WHERE
+        country.name = 'Switzerland'
+
+Which country or countries speak the most languages? (12 languages)
+Hint: Use GROUP BY and COUNT(...)
+
+    SELECT country.name,
+        count(country.name) AS count_lang
+    FROM country JOIN
+        countrylanguage ON
+        country.code = countrylanguage.countrycode
+    GROUP BY
+        country.name
+    ORDER BY
+        count_lang DESC
+    LIMIT
+        10
+
+Which country or countries have the most official languages? (4 languages)
+Hint: Use GROUP BY and ORDER BY
+
+    SELECT country.name,
+    	count(country.name) AS count_lang
+    FROM country JOIN
+    	countrylanguage ON
+    	country.code = countrylanguage.countrycode
+    WHERE
+    	countrylanguage.isofficial
+    GROUP BY
+    	country.name
+    ORDER BY
+    	count_lang DESC
+    LIMIT
+    	10
+
+
+Which languages are spoken in the ten largest (area) countries?
+Hint: Use WITH to get the countries and join with that table
+
+    WITH
+    	largest_countries AS
+    		(SELECT
+    			name,
+    			surfacearea,
+             	code
+    		FROM
+    			country
+            ORDER BY
+             	surfacearea DESC
+    		LIMIT
+             	10
+    		)
+    SELECT largest_countries.name,
+    	count(countrylanguage.language) AS num_lang
+    FROM largest_countries JOIN
+    	countrylanguage ON
+    	largest_countries.code = countrylanguage.countrycode
+    GROUP BY
+    	largest_countries.name
+
+
+What languages are spoken in the 20 poorest (GNP/ capita) countries in the world? (94 with GNP > 0)
+Hint: Use WITH to get the countries, and SELECT DISTINCT to remove duplicates
+
+    WITH
+    	poor AS
+    		(SELECT
+    			name,
+    			gnp,
+             	population,
+             	code
+    		FROM
+    			country
+             WHERE
+             	gnp > 0
+    		)
+    SELECT DISTINCT poor.name,
+        name,
+        language,
+    	gnp / population AS gnp_per_capita
+    FROM
+    	poor JOIN
+        countrylanguage ON poor.code = countrylanguage.countrycode
+    ORDER BY
+    	gnp_per_capita ASC
+    LIMIT
+
+
+Are there any countries without an official language?
+Hint: Use NOT IN with a SELECT
+
+    WITH
+    	poor AS
+    		(SELECT DISTINCT
+    			name,
+    			gnp,
+             	population,
+             	gnp / population AS gnp_per_capita,
+             	code
+    		FROM
+    			country
+            WHERE
+    			gnp > 0
+             ORDER BY
+             	gnp_per_capita ASC
+            LIMIT
+             	20
+    		)
+    SELECT
+    	poor.name,
+        poor.gnp_per_capita,
+        countrylanguage.language,
+    FROM
+    	poor JOIN
+        countrylanguage ON poor.code = countrylanguage.countrycode
+    GROUP BY
+    	poor.name,
+        poor.gnp_per_capita,
+        countrylanguage.language
+    ORDER BY
+    	gnp_per_capita ASC
+
+
+Are there any countries without an official language?
+Hint: Use NOT IN with a SELECT
